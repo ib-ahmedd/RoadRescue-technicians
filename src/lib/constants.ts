@@ -20,12 +20,23 @@ export const STATUS_LABELS: Record<string, string> = {
   matched: "Matched",
   "en-route": "En Route",
   arrived: "Arrived",
+  assessing: "Assessing",
+  "awaiting-payment": "Awaiting Payment",
+  "in-progress": "Service In Progress",
   completed: "Completed",
 };
 
 export const STATUS_FLOW = ["matched", "en-route", "arrived"] as const;
 
 /** Full lifecycle including customer-confirmed completion (display only). */
-export const STATUS_DISPLAY_FLOW = ["matched", "en-route", "arrived", "completed"] as const;
+export const STATUS_DISPLAY_FLOW = [
+  "matched",
+  "en-route",
+  "arrived",
+  "assessing",
+  "awaiting-payment",
+  "in-progress",
+  "completed",
+] as const;
 
 export const SESSION_KEY = "roadrescue_technician_id";

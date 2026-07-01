@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { API_BASE_URL, parseApiResponse } from "@/lib/api";
 import { getSessionProviderId, setSessionProviderId } from "@/lib/session";
 import type { Provider } from "@/lib/types";
+import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
 import styles from "./LoginForm.module.css";
 
 export default function LoginForm() {
@@ -55,6 +56,10 @@ export default function LoginForm() {
 
   return (
     <div className={styles.page}>
+      <header className={styles.topBar}>
+        <span className={styles.topBarBrand}>Technician Portal</span>
+        <ThemeToggle />
+      </header>
       <div className={styles.card}>
         <div className={styles.logo}>
           <span className={styles.logoIcon}>

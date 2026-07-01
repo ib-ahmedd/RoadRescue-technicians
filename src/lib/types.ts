@@ -17,6 +17,9 @@ export type RequestStatus =
   | "matched"
   | "en-route"
   | "arrived"
+  | "assessing"
+  | "awaiting-payment"
+  | "in-progress"
   | "completed";
 
 export interface RequestData {
@@ -36,5 +39,13 @@ export interface RequestData {
   status: RequestStatus;
   assignedProvider: Provider | null;
   contacted: boolean;
+  arrivalConfirmed?: boolean;
+  bookingFee?: number;
+  paymentStatus?: "pending" | "paid";
+  paymentReference?: string;
+  technicianAssessment?: string;
+  quoteAmount?: number;
+  quoteStatus?: "none" | "pending" | "approved" | "rejected" | "paid";
+  quotePaymentReference?: string;
   createdAt: string;
 }
