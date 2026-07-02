@@ -24,6 +24,7 @@ export const STATUS_LABELS: Record<string, string> = {
   "awaiting-payment": "Awaiting Payment",
   "in-progress": "Service In Progress",
   completed: "Completed",
+  disputed: "Disputed",
 };
 
 export const STATUS_FLOW = ["matched", "en-route", "arrived"] as const;

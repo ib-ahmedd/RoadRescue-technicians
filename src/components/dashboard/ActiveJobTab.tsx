@@ -22,13 +22,15 @@ interface ActiveJobTabProps {
   completedJobs: RequestData[];
   activeJob: RequestData | null;
   isOnline: boolean;
-  isDispatched: boolean;
+  isAvailabilityLocked: boolean;
   nextStatus: RequestStatus | null;
   statusUpdating: boolean;
   quoteSubmitting: boolean;
+  completionSubmitting: boolean;
   onToggleAvailability: () => void;
   onAdvanceStatus: () => void;
   onSubmitQuote: (assessment: string, amount: number) => Promise<{ ok: boolean; error?: string }>;
+  onMarkComplete: () => void;
 }
 
 export default function ActiveJobTab({
@@ -36,13 +38,15 @@ export default function ActiveJobTab({
   completedJobs,
   activeJob,
   isOnline,
-  isDispatched,
+  isAvailabilityLocked,
   nextStatus,
   statusUpdating,
   quoteSubmitting,
+  completionSubmitting,
   onToggleAvailability,
   onAdvanceStatus,
   onSubmitQuote,
+  onMarkComplete,
 }: ActiveJobTabProps) {
   const [showQuoteModal, setShowQuoteModal] = useState(false);
 
@@ -77,7 +81,7 @@ export default function ActiveJobTab({
                 : "Go online to receive new job assignments from the operations center."
             }
           >
-            {!isOnline && !isDispatched && (
+            {!isOnline && !isAvailabilityLocked && (
               <button type="button" className="btn btn-primary" style={{ marginTop: "1.5rem" }} onClick={onToggleAvailability}>
                 Go Online
               </button>
@@ -93,7 +97,13 @@ export default function ActiveJobTab({
                   {SERVICE_DETAILS[activeJob.service] ?? activeJob.service}
                 </h2>
               </div>
-              <span className="badge badge-info">{STATUS_LABELS[activeJob.status] ?? activeJob.status}</span>
+              <span
+                className={`badge ${activeJob.status === "disputed" ? "badge-danger" : "badge-info"}`}
+              >
+                {activeJob.status === "in-progress" && activeJob.technicianMarkedComplete
+                  ? "Awaiting customer review"
+                  : STATUS_LABELS[activeJob.status] ?? activeJob.status}
+              </span>
             </div>
 
             <StatusTrack currentStatus={activeJob.status} />
@@ -199,11 +209,55 @@ export default function ActiveJobTab({
                   Open in Maps ↗
                 </a>
               </div>
-            ) : activeJob.status === "in-progress" ? (
+            ) : activeJob.status === "in-progress" && activeJob.technicianMarkedComplete ? (
               <div className={styles.actionRow}>
                 <p className={styles.waitingNote}>
-                  Service is in progress on site. Waiting for the customer to confirm completion on their
-                  tracking page once the work is done.
+                  Waiting for the customer to confirm or dispute completion on their tracking page.
+                </p>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeJob.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline"
+                >
+                  Open in Maps ↗
+                </a>
+              </div>
+            ) : activeJob.status === "in-progress" ? (
+              <div className={styles.actionRow}>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-lg"
+                  onClick={onMarkComplete}
+                  disabled={completionSubmitting}
+                >
+                  {completionSubmitting ? (
+                    <span className="dot-pulse"><span /><span /><span /></span>
+                  ) : (
+                    "Mark job complete"
+                  )}
+                </button>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeJob.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline"
+                >
+                  Open in Maps ↗
+                </a>
+              </div>
+            ) : activeJob.status === "disputed" ? (
+              <div className={styles.actionRow}>
+                <p
+                  className={styles.waitingNote}
+                  style={{
+                    borderColor: "rgba(239,68,68,0.35)",
+                    background: "rgba(239,68,68,0.08)",
+                    color: "#f87171",
+                  }}
+                >
+                  The customer raised a dispute on this job. Operations is reviewing the case — you
+                  may be contacted for follow-up.
                 </p>
                 <a
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(activeJob.location)}`}

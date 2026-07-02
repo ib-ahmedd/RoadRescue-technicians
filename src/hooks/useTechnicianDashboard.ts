@@ -34,6 +34,7 @@ export function useTechnicianDashboard() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
+  const [completionSubmitting, setCompletionSubmitting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -83,10 +84,11 @@ export function useTechnicianDashboard() {
     return () => clearInterval(interval);
   }, [sessionId, fetchData]);
 
-  const activeJob = useMemo(
-    () => requests.find((r) => ACTIVE_STATUSES.includes(r.status)) ?? null,
-    [requests]
-  );
+  const activeJob = useMemo(() => {
+    const inProgress = requests.find((r) => ACTIVE_STATUSES.includes(r.status));
+    if (inProgress) return inProgress;
+    return requests.find((r) => r.status === "disputed") ?? null;
+  }, [requests]);
 
   const completedJobs = useMemo(
     () =>
@@ -97,7 +99,7 @@ export function useTechnicianDashboard() {
   );
 
   const handleToggleAvailability = async () => {
-    if (!provider || provider.status === "Dispatched") return;
+    if (!provider || provider.status === "Dispatched" || provider.status === "Engaged") return;
 
     const newStatus = provider.status === "Available" ? "Offline" : "Available";
     try {
@@ -173,6 +175,27 @@ export function useTechnicianDashboard() {
     }
   };
 
+  const handleMarkComplete = async () => {
+    if (!activeJob || !sessionId) return;
+
+    setCompletionSubmitting(true);
+    setServerError(null);
+    try {
+      const res = await apiFetch("/api/requests/mark-complete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: activeJob.id, providerId: sessionId }),
+      });
+      const updated = await parseApiResponse<RequestData>(res);
+      setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
+      await fetchData(true);
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : "Failed to mark job complete.");
+    } finally {
+      setCompletionSubmitting(false);
+    }
+  };
+
   const handleSignOut = () => {
     clearSession();
     router.push("/login");
@@ -180,6 +203,8 @@ export function useTechnicianDashboard() {
 
   const isOnline = provider ? provider.status === "Available" : false;
   const isDispatched = provider ? provider.status === "Dispatched" : false;
+  const isEngaged = provider ? provider.status === "Engaged" : false;
+  const isAvailabilityLocked = isDispatched || isEngaged;
   const nextStatus = activeJob ? getNextStatus(activeJob.status) : null;
 
   return {
@@ -195,12 +220,16 @@ export function useTechnicianDashboard() {
     completedJobs,
     isOnline,
     isDispatched,
+    isEngaged,
+    isAvailabilityLocked,
     nextStatus,
     statusUpdating,
     quoteSubmitting,
+    completionSubmitting,
     handleToggleAvailability,
     handleAdvanceStatus,
     handleSubmitQuote,
+    handleMarkComplete,
     handleSignOut,
   };
 }

@@ -7,21 +7,35 @@ interface StatusTrackProps {
 }
 
 export default function StatusTrack({ currentStatus }: StatusTrackProps) {
+  const isDisputed = currentStatus === "disputed";
+  const effectiveStatus = isDisputed ? "completed" : currentStatus;
+  const currentIdx = STATUS_DISPLAY_FLOW.indexOf(
+    effectiveStatus as (typeof STATUS_DISPLAY_FLOW)[number]
+  );
+
   return (
     <div className={styles.statusTrack}>
       {STATUS_DISPLAY_FLOW.map((step) => {
         const stepIdx = STATUS_DISPLAY_FLOW.indexOf(step);
-        const currentIdx = STATUS_DISPLAY_FLOW.indexOf(
-          currentStatus as (typeof STATUS_DISPLAY_FLOW)[number]
-        );
         const isDone = currentIdx >= 0 && stepIdx < currentIdx;
-        const isActive = step === currentStatus;
+        const isActive =
+          step === effectiveStatus ||
+          (step === "completed" && isDisputed);
+        const label =
+          step === "completed" && isDisputed
+            ? STATUS_LABELS.disputed
+            : STATUS_LABELS[step];
+        const activeClass = isActive
+          ? isDisputed
+            ? styles.statusStepDisputed
+            : styles.statusStepActive
+          : "";
         return (
           <div
             key={step}
-            className={`${styles.statusStep} ${isDone ? styles.statusStepDone : ""} ${isActive ? styles.statusStepActive : ""}`}
+            className={`${styles.statusStep} ${isDone ? styles.statusStepDone : ""} ${activeClass}`}
           >
-            {STATUS_LABELS[step]}
+            {label}
           </div>
         );
       })}

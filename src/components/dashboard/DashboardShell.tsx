@@ -15,6 +15,8 @@ interface DashboardShellProps {
   sidebarOpen: boolean;
   isOnline: boolean;
   isDispatched: boolean;
+  isEngaged: boolean;
+  isAvailabilityLocked: boolean;
   onTabChange: (tab: Tab) => void;
   onSidebarOpen: () => void;
   onSidebarClose: () => void;
@@ -32,6 +34,8 @@ export default function DashboardShell({
   sidebarOpen,
   isOnline,
   isDispatched,
+  isEngaged,
+  isAvailabilityLocked,
   onTabChange,
   onSidebarOpen,
   onSidebarClose,
@@ -52,7 +56,17 @@ export default function DashboardShell({
         <span className={styles.brandName}>Technician Portal</span>
         <div className={styles.mobileHeaderActions}>
           <ThemeToggle />
-          <span className={`badge ${isOnline ? "badge-success" : isDispatched ? "badge-info" : "badge-danger"}`}>
+          <span
+            className={`badge ${
+              isOnline
+                ? "badge-success"
+                : isDispatched
+                  ? "badge-info"
+                  : isEngaged
+                    ? "badge-danger"
+                    : "badge-danger"
+            }`}
+          >
             {provider.status}
           </span>
         </div>
@@ -63,7 +77,8 @@ export default function DashboardShell({
         activeTab={activeTab}
         activeJob={activeJob}
         isOnline={isOnline}
-        isDispatched={isDispatched}
+        isEngaged={isEngaged}
+        isAvailabilityLocked={isAvailabilityLocked}
         sidebarOpen={sidebarOpen}
         onTabChange={onTabChange}
         onClose={onSidebarClose}

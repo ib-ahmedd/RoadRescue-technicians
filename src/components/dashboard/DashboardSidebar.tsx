@@ -9,7 +9,8 @@ interface DashboardSidebarProps {
   activeTab: Tab;
   activeJob: RequestData | null;
   isOnline: boolean;
-  isDispatched: boolean;
+  isEngaged: boolean;
+  isAvailabilityLocked: boolean;
   sidebarOpen: boolean;
   onTabChange: (tab: Tab) => void;
   onClose: () => void;
@@ -22,7 +23,8 @@ export default function DashboardSidebar({
   activeTab,
   activeJob,
   isOnline,
-  isDispatched,
+  isEngaged,
+  isAvailabilityLocked,
   sidebarOpen,
   onTabChange,
   onClose,
@@ -90,7 +92,7 @@ export default function DashboardSidebar({
         <div className={styles.availabilityToggle}>
           <div>
             <div className={styles.availabilityLabel}>Availability</div>
-            <div className={`${styles.availabilityStatus} ${isOnline ? "text-amber" : ""}`}>
+            <div className={`${styles.availabilityStatus} ${isOnline ? "text-amber" : isEngaged ? "" : ""}`} style={isEngaged ? { color: "#f87171" } : undefined}>
               {provider.status}
             </div>
           </div>
@@ -98,9 +100,15 @@ export default function DashboardSidebar({
             type="button"
             className={`${styles.toggle} ${isOnline ? styles.toggleOn : ""}`}
             onClick={onToggleAvailability}
-            disabled={isDispatched}
+            disabled={isAvailabilityLocked}
             aria-label="Toggle availability"
-            title={isDispatched ? "Cannot go offline while on a job" : undefined}
+            title={
+              isAvailabilityLocked
+                ? isEngaged
+                  ? "Cannot change availability while a dispute is active"
+                  : "Cannot go offline while on a job"
+                : undefined
+            }
           >
             <span className={styles.toggleKnob} />
           </button>

@@ -7,7 +7,7 @@ export interface Provider {
   speciality: string;
   rating: number;
   reviews: number;
-  status: "Available" | "Dispatched" | "Offline";
+  status: "Available" | "Dispatched" | "Engaged" | "Offline";
   avatar: string;
   username: string | null;
 }
@@ -20,7 +20,8 @@ export type RequestStatus =
   | "assessing"
   | "awaiting-payment"
   | "in-progress"
-  | "completed";
+  | "completed"
+  | "disputed";
 
 export interface RequestData {
   id: string;
@@ -40,6 +41,8 @@ export interface RequestData {
   assignedProvider: Provider | null;
   contacted: boolean;
   arrivalConfirmed?: boolean;
+  completionConfirmed?: boolean;
+  technicianMarkedComplete?: boolean;
   bookingFee?: number;
   paymentStatus?: "pending" | "paid";
   paymentReference?: string;

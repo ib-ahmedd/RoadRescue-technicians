@@ -21,13 +21,17 @@ export default function TechnicianDashboard() {
     completedJobs,
     isOnline,
     isDispatched,
+    isEngaged,
+    isAvailabilityLocked,
     nextStatus,
     statusUpdating,
     handleToggleAvailability,
     handleAdvanceStatus,
     handleSubmitQuote,
+    handleMarkComplete,
     handleSignOut,
     quoteSubmitting,
+    completionSubmitting,
   } = useTechnicianDashboard();
 
   if (!sessionId || (loading && !provider)) {
@@ -50,6 +54,8 @@ export default function TechnicianDashboard() {
       sidebarOpen={sidebarOpen}
       isOnline={isOnline}
       isDispatched={isDispatched}
+      isEngaged={isEngaged}
+      isAvailabilityLocked={isAvailabilityLocked}
       onTabChange={setActiveTab}
       onSidebarOpen={() => setSidebarOpen(true)}
       onSidebarClose={() => setSidebarOpen(false)}
@@ -62,13 +68,15 @@ export default function TechnicianDashboard() {
           completedJobs={completedJobs}
           activeJob={activeJob}
           isOnline={isOnline}
-          isDispatched={isDispatched}
+          isAvailabilityLocked={isAvailabilityLocked}
           nextStatus={nextStatus}
           statusUpdating={statusUpdating}
           quoteSubmitting={quoteSubmitting}
+          completionSubmitting={completionSubmitting}
           onToggleAvailability={handleToggleAvailability}
           onAdvanceStatus={handleAdvanceStatus}
           onSubmitQuote={handleSubmitQuote}
+          onMarkComplete={handleMarkComplete}
         />
       )}
       {activeTab === "history" && <JobHistoryTab completedJobs={completedJobs} />}

@@ -400,6 +400,13 @@
   box-shadow: var(--shadow-amber);
 }
 
+.statusStepDisputed {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.12);
+}
+
 .actionRow {
   display: flex;
   gap: 0.75rem;
