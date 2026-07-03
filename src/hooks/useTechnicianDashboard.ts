@@ -85,9 +85,13 @@ export function useTechnicianDashboard() {
   }, [sessionId, fetchData]);
 
   const activeJob = useMemo(() => {
-    const inProgress = requests.find((r) => ACTIVE_STATUSES.includes(r.status));
-    if (inProgress) return inProgress;
-    return requests.find((r) => r.status === "disputed") ?? null;
+    const sorted = [...requests].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const pipeline = sorted.find((r) => ACTIVE_STATUSES.includes(r.status));
+    if (pipeline) return pipeline;
+    const latest = sorted[0];
+    return latest?.status === "disputed" ? latest : null;
   }, [requests]);
 
   const completedJobs = useMemo(
