@@ -52,3 +52,35 @@ export interface RequestData {
   quotePaymentReference?: string;
   createdAt: string;
 }
+
+export interface Dispute {
+  id: string;
+  requestId: string;
+  customerName: string;
+  customerPhone: string;
+  reason: string;
+  description: string;
+  status: "open" | "reviewing" | "resolved";
+  createdAt: string;
+}
+
+export type TechnicianCreditType = "booking_commission" | "quote_commission";
+
+export interface TechnicianCredit {
+  id: string;
+  providerId: string;
+  requestId: string;
+  customerName: string;
+  type: TechnicianCreditType;
+  sourceAmount: number;
+  rate: number;
+  amount: number;
+  createdAt: string;
+}
+
+export interface TechnicianBalanceSummary {
+  accountBalance: number;
+  bookingCommissionTotal: number;
+  quoteCommissionTotal: number;
+  transactionCount: number;
+}

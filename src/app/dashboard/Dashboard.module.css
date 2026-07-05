@@ -676,3 +676,154 @@
     font-size: 1.25rem;
   }
 }
+
+/* ── Earnings ───────────────────────────────────────────── */
+.earningsLayout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.earningsSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.earningsSummaryCard {
+  background: rgba(15, 22, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--r-md);
+  padding: 1.25rem;
+}
+
+.earningsSummaryPrimary {
+  border-color: rgba(34, 197, 94, 0.25);
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(15, 22, 42, 0.5));
+}
+
+.earningsSummaryLabel {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+
+.earningsSummaryValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.earningsSummaryHint {
+  display: block;
+  margin-top: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.earningsListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.earningsEmpty {
+  text-align: center;
+  padding: 2.5rem 1.5rem;
+}
+
+.earningsEmptySub {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  max-width: 420px;
+  margin: 0.5rem auto 0;
+  line-height: 1.5;
+}
+
+.earningsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.earningsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: var(--r-sm);
+}
+
+.earningsRowMain {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.earningsRowCustomer {
+  font-weight: 600;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.earningsRequestId {
+  font-size: 0.78rem;
+  font-family: monospace;
+  color: var(--text-muted);
+}
+
+.earningsRowMeta {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.earningsRowAmount {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--success);
+  margin: 0;
+}
+
+.earningsRowSource {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin: 0.2rem 0 0;
+}
+
+.earningsRowTime {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin: 0.25rem 0 0;
+}
+
+@media (max-width: 1100px) {
+  .earningsSummaryGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .earningsSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .earningsRow {
+    flex-direction: column;
+  }
+
+  .earningsRowMeta {
+    text-align: left;
+  }
+}

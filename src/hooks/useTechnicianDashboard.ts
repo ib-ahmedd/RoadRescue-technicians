@@ -1,13 +1,27 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL, apiFetch, parseApiResponse } from "@/lib/api";
 import { STATUS_FLOW } from "@/lib/constants";
 import { clearSession, getSessionProviderId } from "@/lib/session";
-import type { Provider, RequestData, RequestStatus } from "@/lib/types";
+import {
+  buildSnapshot,
+  detectTechnicianChanges,
+  type TechnicianDataSnapshot,
+  type TechnicianNotification,
+} from "@/lib/technicianNotifications";
+import { useTechnicianNotifications } from "@/hooks/useTechnicianNotifications";
+import type {
+  Dispute,
+  Provider,
+  RequestData,
+  RequestStatus,
+  TechnicianBalanceSummary,
+  TechnicianCredit,
+} from "@/lib/types";
 
-export type Tab = "job" | "history" | "profile";
+export type Tab = "job" | "history" | "earnings" | "profile";
 
 const ACTIVE_STATUSES: RequestStatus[] = [
   "matched",
@@ -30,12 +44,32 @@ export function useTechnicianDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>("job");
   const [provider, setProvider] = useState<Provider | null>(null);
   const [requests, setRequests] = useState<RequestData[]>([]);
+  const [disputes, setDisputes] = useState<Dispute[]>([]);
   const [loading, setLoading] = useState(true);
   const [serverError, setServerError] = useState<string | null>(null);
   const [statusUpdating, setStatusUpdating] = useState(false);
   const [quoteSubmitting, setQuoteSubmitting] = useState(false);
   const [completionSubmitting, setCompletionSubmitting] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [credits, setCredits] = useState<TechnicianCredit[]>([]);
+  const [balanceSummary, setBalanceSummary] = useState<TechnicianBalanceSummary>({
+    accountBalance: 0,
+    bookingCommissionTotal: 0,
+    quoteCommissionTotal: 0,
+    transactionCount: 0,
+  });
+
+  const { notifications, pushNotifications, dismissNotification } = useTechnicianNotifications();
+  const prevSnapshotRef = useRef<TechnicianDataSnapshot | null>(null);
+  const isInitialLoadRef = useRef(true);
+  const skipRequestIdsRef = useRef<Set<string>>(new Set());
+  const requestsRef = useRef(requests);
+  const disputesRef = useRef(disputes);
+  const creditsRef = useRef(credits);
+
+  requestsRef.current = requests;
+  disputesRef.current = disputes;
+  creditsRef.current = credits;
 
   useEffect(() => {
     const id = getSessionProviderId();
@@ -46,36 +80,76 @@ export function useTechnicianDashboard() {
     setSessionId(id);
   }, [router]);
 
-  const fetchData = useCallback(async (silent = false) => {
-    if (!sessionId) return;
-    if (!silent) setLoading(true);
-    setServerError(null);
+  const markSkipRequestStatus = useCallback((id: string) => {
+    skipRequestIdsRef.current.add(id);
+  }, []);
 
-    try {
-      const [provRes, reqRes] = await Promise.all([
-        apiFetch(`/api/providers?id=${sessionId}`, { bustCache: silent }),
-        apiFetch("/api/requests", { bustCache: silent }),
-      ]);
+  const fetchData = useCallback(
+    async (silent = false) => {
+      if (!sessionId) return;
+      if (!silent) setLoading(true);
+      setServerError(null);
 
-      if (!provRes.ok) {
-        clearSession();
-        router.replace("/login");
-        return;
+      try {
+        const [provRes, reqRes, disputeRes, creditsRes, summaryRes] = await Promise.all([
+          apiFetch(`/api/providers?id=${sessionId}`, { bustCache: silent }),
+          apiFetch("/api/requests", { bustCache: silent }),
+          apiFetch("/api/disputes", { bustCache: silent }),
+          apiFetch(`/api/technician-credits?providerId=${sessionId}`, { bustCache: silent }),
+          apiFetch(`/api/technician-credits/summary?providerId=${sessionId}`, { bustCache: silent }),
+        ]);
+
+        if (!provRes.ok) {
+          clearSession();
+          router.replace("/login");
+          return;
+        }
+
+        const prov: Provider = await provRes.json();
+        setProvider(prov);
+
+        const allRequests: RequestData[] = reqRes.ok ? await reqRes.json() : [];
+        const nextRequests = allRequests.filter((r) => r.assignedProvider?.id === sessionId);
+        if (reqRes.ok) setRequests(nextRequests);
+
+        const allDisputes: Dispute[] = disputeRes.ok ? await disputeRes.json() : disputesRef.current;
+        if (disputeRes.ok) setDisputes(allDisputes);
+
+        const nextCredits: TechnicianCredit[] = creditsRes.ok
+          ? await creditsRes.json()
+          : creditsRef.current;
+        if (creditsRes.ok) setCredits(nextCredits);
+
+        if (summaryRes.ok) {
+          setBalanceSummary(await summaryRes.json());
+        }
+
+        const nextSnapshot = buildSnapshot(
+          reqRes.ok ? allRequests : [],
+          disputeRes.ok ? allDisputes : [],
+          nextCredits,
+          sessionId
+        );
+
+        if (silent && !isInitialLoadRef.current && prevSnapshotRef.current) {
+          const skipRequestIds = new Set(skipRequestIdsRef.current);
+          skipRequestIdsRef.current.clear();
+          const changes = detectTechnicianChanges(prevSnapshotRef.current, nextSnapshot, {
+            skipRequestIds,
+          });
+          pushNotifications(changes);
+        }
+
+        prevSnapshotRef.current = nextSnapshot;
+        isInitialLoadRef.current = false;
+      } catch {
+        setServerError(`Could not connect to the API server at ${API_BASE_URL}`);
+      } finally {
+        if (!silent) setLoading(false);
       }
-
-      const prov: Provider = await provRes.json();
-      setProvider(prov);
-
-      if (reqRes.ok) {
-        const all: RequestData[] = await reqRes.json();
-        setRequests(all.filter((r) => r.assignedProvider?.id === sessionId));
-      }
-    } catch {
-      setServerError(`Could not connect to the API server at ${API_BASE_URL}`);
-    } finally {
-      if (!silent) setLoading(false);
-    }
-  }, [sessionId, router]);
+    },
+    [sessionId, router, pushNotifications]
+  );
 
   useEffect(() => {
     if (!sessionId) return;
@@ -135,6 +209,7 @@ export function useTechnicianDashboard() {
       });
       if (res.ok) {
         const updated = await res.json();
+        markSkipRequestStatus(activeJob.id);
         setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
         await fetchData(true);
       }
@@ -167,6 +242,7 @@ export function useTechnicianDashboard() {
         }),
       });
       const updated = await parseApiResponse<RequestData>(res);
+      markSkipRequestStatus(activeJob.id);
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
       await fetchData(true);
       return { ok: true };
@@ -191,6 +267,7 @@ export function useTechnicianDashboard() {
         body: JSON.stringify({ id: activeJob.id, providerId: sessionId }),
       });
       const updated = await parseApiResponse<RequestData>(res);
+      markSkipRequestStatus(activeJob.id);
       setRequests((prev) => prev.map((r) => (r.id === updated.id ? updated : r)));
       await fetchData(true);
     } catch (err) {
@@ -204,6 +281,26 @@ export function useTechnicianDashboard() {
     clearSession();
     router.push("/login");
   };
+
+  const handleNotificationNavigate = useCallback(
+    (notification: TechnicianNotification) => {
+      dismissNotification(notification.toastId);
+
+      switch (notification.kind) {
+        case "new_assignment":
+        case "new_dispute":
+        case "dispute_status":
+        case "quote_approved":
+        case "quote_paid":
+          setActiveTab("job");
+          break;
+        case "payment_credited":
+          setActiveTab("earnings");
+          break;
+      }
+    },
+    [dismissNotification]
+  );
 
   const isOnline = provider ? provider.status === "Available" : false;
   const isDispatched = provider ? provider.status === "Dispatched" : false;
@@ -222,6 +319,12 @@ export function useTechnicianDashboard() {
     setSidebarOpen,
     activeJob,
     completedJobs,
+    credits,
+    balanceSummary,
+    disputes,
+    notifications,
+    dismissNotification,
+    handleNotificationNavigate,
     isOnline,
     isDispatched,
     isEngaged,

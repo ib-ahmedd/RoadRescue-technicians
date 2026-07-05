@@ -11,6 +11,7 @@ interface DashboardShellProps {
   activeTab: Tab;
   activeJob: RequestData | null;
   completedJobCount: number;
+  accountBalance: number;
   serverError: string | null;
   sidebarOpen: boolean;
   isOnline: boolean;
@@ -30,6 +31,7 @@ export default function DashboardShell({
   activeTab,
   activeJob,
   completedJobCount,
+  accountBalance,
   serverError,
   sidebarOpen,
   isOnline,
@@ -76,6 +78,7 @@ export default function DashboardShell({
         provider={provider}
         activeTab={activeTab}
         activeJob={activeJob}
+        accountBalance={accountBalance}
         isOnline={isOnline}
         isEngaged={isEngaged}
         isAvailabilityLocked={isAvailabilityLocked}
@@ -87,7 +90,11 @@ export default function DashboardShell({
       />
 
       <main className={styles.content}>
-        <DashboardHeader activeTab={activeTab} completedJobCount={completedJobCount} />
+        <DashboardHeader
+          activeTab={activeTab}
+          completedJobCount={completedJobCount}
+          accountBalance={accountBalance}
+        />
         {serverError && <div className={styles.errorBanner}>{serverError}</div>}
         {children}
       </main>

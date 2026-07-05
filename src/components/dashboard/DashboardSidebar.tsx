@@ -1,4 +1,5 @@
 import ThemeToggle from "@/components/ThemeToggle/ThemeToggle";
+import { formatNaira } from "@/lib/formatCurrency";
 import { SERVICE_DETAILS } from "@/lib/constants";
 import type { Provider, RequestData } from "@/lib/types";
 import type { Tab } from "@/hooks/useTechnicianDashboard";
@@ -8,6 +9,7 @@ interface DashboardSidebarProps {
   provider: Provider;
   activeTab: Tab;
   activeJob: RequestData | null;
+  accountBalance: number;
   isOnline: boolean;
   isEngaged: boolean;
   isAvailabilityLocked: boolean;
@@ -22,6 +24,7 @@ export default function DashboardSidebar({
   provider,
   activeTab,
   activeJob,
+  accountBalance,
   isOnline,
   isEngaged,
   isAvailabilityLocked,
@@ -74,6 +77,18 @@ export default function DashboardSidebar({
           onClick={() => selectTab("history")}
         >
           📋 Job History
+        </button>
+        <button
+          type="button"
+          className={`${styles.navItem} ${activeTab === "earnings" ? styles.navItemActive : ""}`}
+          onClick={() => selectTab("earnings")}
+        >
+          💰 Earnings
+          {accountBalance > 0 && (
+            <span className="badge badge-success" style={{ marginLeft: "auto", fontSize: "0.65rem" }}>
+              {formatNaira(accountBalance)}
+            </span>
+          )}
         </button>
         <button
           type="button"

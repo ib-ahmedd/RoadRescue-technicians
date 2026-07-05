@@ -2,8 +2,10 @@
 
 import ActiveJobTab from "@/components/dashboard/ActiveJobTab";
 import DashboardShell from "@/components/dashboard/DashboardShell";
+import EarningsTab from "@/components/dashboard/EarningsTab";
 import JobHistoryTab from "@/components/dashboard/JobHistoryTab";
 import ProfileTab from "@/components/dashboard/ProfileTab";
+import TechnicianToastStack from "@/components/notifications/TechnicianToastStack";
 import { useTechnicianDashboard } from "@/hooks/useTechnicianDashboard";
 import styles from "./Dashboard.module.css";
 
@@ -32,6 +34,11 @@ export default function TechnicianDashboard() {
     handleSignOut,
     quoteSubmitting,
     completionSubmitting,
+    credits,
+    balanceSummary,
+    notifications,
+    dismissNotification,
+    handleNotificationNavigate,
   } = useTechnicianDashboard();
 
   if (!sessionId || (loading && !provider)) {
@@ -45,11 +52,18 @@ export default function TechnicianDashboard() {
   if (!provider) return null;
 
   return (
-    <DashboardShell
+    <>
+      <TechnicianToastStack
+        notifications={notifications}
+        onDismiss={dismissNotification}
+        onNavigate={handleNotificationNavigate}
+      />
+      <DashboardShell
       provider={provider}
       activeTab={activeTab}
       activeJob={activeJob}
       completedJobCount={completedJobs.length}
+      accountBalance={balanceSummary.accountBalance}
       serverError={serverError}
       sidebarOpen={sidebarOpen}
       isOnline={isOnline}
@@ -80,7 +94,11 @@ export default function TechnicianDashboard() {
         />
       )}
       {activeTab === "history" && <JobHistoryTab completedJobs={completedJobs} />}
+      {activeTab === "earnings" && (
+        <EarningsTab credits={credits} balanceSummary={balanceSummary} />
+      )}
       {activeTab === "profile" && <ProfileTab provider={provider} />}
     </DashboardShell>
+    </>
   );
 }
