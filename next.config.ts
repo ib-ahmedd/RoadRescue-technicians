@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
-const API_SERVER = process.env.API_SERVER_URL || "http://localhost:5000";
+const API_SERVER =
+  process.env.API_SERVER_URL || "https://roadrescue-server.onrender.com";
 
 const nextConfig: NextConfig = {
   async rewrites() {
